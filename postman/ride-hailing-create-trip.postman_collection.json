@@ -1,0 +1,191 @@
+{
+  "info": {
+    "_postman_id": "d9f9a4f5-55d5-4e1f-b001-ride-create-trip",
+    "name": "Ride Hailing - Create Trip",
+    "description": "Luá»“ng kiá»ƒm thá»­ Ä‘Äƒng nháº­p, táº¡o quote vÃ  táº¡o chuyáº¿n. Import collection rá»“i cháº¡y tá»«ng request theo thá»© tá»±.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "email", "value": "customer1@example.com" },
+    { "key": "password", "value": "Password123!" },
+    { "key": "token", "value": "" },
+    { "key": "createTripQuoteId", "value": "" },
+    { "key": "quoteId", "value": "" },
+    { "key": "quote_id", "value": "" },
+    { "key": "createTripFareAmount", "value": "" },
+    { "key": "fareAmount", "value": "" },
+    { "key": "fare_amount", "value": "" },
+    { "key": "createTripId", "value": "" },
+    { "key": "createTripIdempotencyKey", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. ÄÄƒng nháº­p customer",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{email}}\",\"password\":\"{{password}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('ÄÄƒng nháº­p thÃ nh cÃ´ng', function () { pm.response.to.have.status(200); });",
+            "var json = pm.response.json();",
+            "pm.collectionVariables.set('token', json.token);",
+            "pm.expect(json.token).to.be.a('string').and.not.empty;"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "2. Táº¡o bÃ¡o giÃ¡",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"serviceType\":\"RIDE\",\"pickup\":{\"latitude\":10.7769,\"longitude\":106.7009},\"destination\":{\"latitude\":10.7800,\"longitude\":106.7050}}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/pricing/quotes"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Táº¡o quote thÃ nh cÃ´ng', function () { pm.response.to.have.status(200); });",
+            "var json = pm.response.json();",
+            "pm.collectionVariables.set('createTripQuoteId', json.quoteId);",
+            "pm.collectionVariables.set('quoteId', json.quoteId);",
+            "pm.collectionVariables.set('quote_id', json.quoteId);",
+            "pm.collectionVariables.set('createTripFareAmount', json.totalFare);",
+            "pm.collectionVariables.set('fareAmount', json.totalFare);",
+            "pm.collectionVariables.set('fare_amount', json.totalFare);",
+            "pm.expect(json.quoteId).to.be.a('string').and.not.empty;",
+            "pm.expect(json.totalFare).to.be.a('number');"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "3. Kiá»ƒm tra quote vá»«a táº¡o",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/quotes/{{quote_id}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Quote tá»“n táº¡i vÃ  chÆ°a háº¿t háº¡n', function () { pm.response.to.have.status(200); });",
+            "var json = pm.response.json();",
+            "pm.expect(json.quoteId).to.eql(pm.collectionVariables.get('createTripQuoteId'));",
+            "pm.expect(new Date(json.expiresAt).getTime()).to.be.above(Date.now());"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "4. Táº¡o chuyáº¿n",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "{{createTripIdempotencyKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quoteId\":\"{{createTripQuoteId}}\",\"serviceType\":\"RIDE\",\"pickupLatitude\":10.7769,\"pickupLongitude\":106.7009,\"dropoffLatitude\":10.7800,\"dropoffLongitude\":106.7050,\"fareAmount\":{{createTripFareAmount}}}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/trips"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('createTripIdempotencyKey', 'postman-trip-' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Táº¡o chuyáº¿n thÃ nh cÃ´ng', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('createTripId', json.tripId);",
+              "pm.test('Chuyáº¿n á»Ÿ tráº¡ng thÃ¡i MATCHING', function () { pm.expect(json.status).to.eql('MATCHING'); });",
+              "pm.expect(json.tripId).to.be.a('string').and.not.empty;",
+              "pm.expect(json.fareAmount).to.eql(Number(pm.collectionVariables.get('createTripFareAmount')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Replay cÃ¹ng Idempotency-Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Idempotency-Key", "value": "{{createTripIdempotencyKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quoteId\":\"{{createTripQuoteId}}\",\"serviceType\":\"RIDE\",\"pickupLatitude\":10.7769,\"pickupLongitude\":106.7009,\"dropoffLatitude\":10.7800,\"dropoffLongitude\":106.7050,\"fareAmount\":{{createTripFareAmount}}}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/trips"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Replay tráº£ vá» thÃ nh cÃ´ng', function () { pm.response.to.have.status(200); });",
+            "pm.test('KhÃ´ng táº¡o trip má»›i', function () { pm.expect(pm.response.json().tripId).to.eql(pm.collectionVariables.get('createTripId')); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "6. Thiáº¿u Idempotency-Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quoteId\":\"{{createTripQuoteId}}\",\"serviceType\":\"RIDE\",\"pickupLatitude\":10.7769,\"pickupLongitude\":106.7009,\"dropoffLatitude\":10.7800,\"dropoffLongitude\":106.7050,\"fareAmount\":{{createTripFareAmount}}}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/trips"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Tá»« chá»‘i request thiáº¿u key', function () { pm.response.to.have.status(400); });",
+            "pm.expect(pm.response.json().code).to.eql('VALIDATION_ERROR');"
+          ]
+        }
+      }]
+    }
+  ]
+}

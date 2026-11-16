@@ -1,0 +1,85 @@
+================================================================================
+                    🚗 HỆ THỐNG XÁC THỰC & TÀI KHOẢN TEST 🔐
+================================================================================
+
+📌 Mật khẩu mặc định dùng chung cho tất cả tài khoản:
+   🔑 Password:  Password123!
+
+--------------------------------------------------------------------------------
+1. DANH SÁCH TÀI KHOẢN TEST SẴN CÓ
+--------------------------------------------------------------------------------
++------------+--------------------+------------------------+----------------+------------------+
+| VAI TRÒ    | TÊN HIỂN THỊ       | EMAIL                  | SỐ ĐIỆN THOẠI  | SỐ DƯ VÍ         |
++------------+--------------------+------------------------+----------------+------------------+
+| CUSTOMER   | Nguyen Van Khach   | customer1@example.com  | 0901234567     | 1,000,000 VND    |
+| CUSTOMER   | Tran Thi B         | customer2@example.com  | 0902222222     | 0 VND            |
+| DRIVER     | Tran Van Taixe     | driver1@example.com    | 0987654321     | 500,000 VND      |
+| DRIVER     | Le Van Tai         | driver2@example.com    | 0988888888     | 300,000 VND      |
+| ADMIN      | System Admin       | admin@example.com      | 0999999999     | -                |
++------------+--------------------+------------------------+----------------+------------------+
+
+--------------------------------------------------------------------------------
+2. CÁC ENDPOINT AUTH (API GATEWAY :8081)
+--------------------------------------------------------------------------------
+[POST] Đăng ký  : http://localhost:8081/api/v1/auth/register
+[POST] Đăng nhập: http://localhost:8081/api/v1/auth/login
+
+*(Nếu gọi trực tiếp identity-service: đổi cổng sang :8085)*
+
+--------------------------------------------------------------------------------
+3. CẤU HÌNH HEADER XÁC THỰC (Bắt buộc cho các API bảo mật)
+--------------------------------------------------------------------------------
+- Type : Bearer Token
+- Key  : Authorization
+- Value: Bearer <access_token_nhan_duoc_khi_dang_nhap>
+
+--------------------------------------------------------------------------------
+4. JSON BODY MẪU (Postman / Body -> raw -> JSON)
+--------------------------------------------------------------------------------
+
+[A] Form Đăng nhập (Hỗ trợ cả Email, Số điện thoại hoặc identifier):
+---------------------------------------------
+Cách 1: Đăng nhập bằng Email:
+{
+  "email": "customer1@example.com",
+  "password": "Password123!"
+}
+
+Cách 2: Đăng nhập bằng Số điện thoại:
+{
+  "phoneNumber": "0901234567",
+  "password": "Password123!"
+}
+
+Cách 3: Đăng nhập bằng trường chung identifier:
+{
+  "identifier": "customer1@example.com",
+  "password": "Password123!"
+}
+
+[B] Form Đăng ký tài khoản mới:
+---------------------------------------------
+{
+  "email": "khachmoi@example.com",
+  "phoneNumber": "0912345678",
+  "password": "Password123!",
+  "fullName": "Nguyen Van Moi",
+  "role": "CUSTOMER"
+}
+*(role có thể là CUSTOMER hoặc DRIVER. Nếu là DRIVER, có thể bổ sung vehicleLicensePlate và vehicleModel)*
+
+--------------------------------------------------------------------------------
+5. SCRIPT LƯU TOKEN TỰ ĐỘNG (Dán vào tab 'Tests' của request Đăng nhập trong Postman)
+--------------------------------------------------------------------------------
+if (pm.response.code === 200) {
+    var response = pm.response.json();
+    var token = response.accessToken || (response.data && response.data.accessToken);
+    if (token) {
+        pm.globals.set("token", token);
+        console.log("✅ Token đã được lưu tự động vào biến toàn cục: " + token);
+    }
+}
+
+================================================================================
+              Mẹo: Các API sau chỉ cần đặt Header: Authorization = Bearer {{token}}
+================================================================================

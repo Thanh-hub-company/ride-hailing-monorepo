@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 1. Kế thừa từ Parent POM gốc ở thư mục ngoài cùng -->
+    <parent>
+        <groupId>com.ridehailing</groupId>
+        <artifactId>ride-hailing-monorepo</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath> <!-- Lùi 1 cấp ra gốc -->
+    </parent>
+
+    <artifactId>apps-parent</artifactId>
+    <name>apps-parent</name>
+    <description>Parent Module for all Microservice Applications</description>
+
+    <!-- 2. Khai báo dạng pom để gom nhóm các Microservices (Không cần thư mục src) -->
+    <packaging>pom</packaging>
+
+    <!-- 3. Danh sách các Microservices độc lập nằm bên trong thư mục apps/ -->
+    <modules>
+        <module>api-gateway</module>
+        <module>user-driver-service</module>
+        <module>location-service</module>
+        <module>pricing-service</module>
+        <module>trip-dispatch-service</module>
+        <module>payment-wallet-service</module>
+
+    </modules>
+
+</project>
